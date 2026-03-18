@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Product;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,10 +24,10 @@ public class ProductServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String action  = req.getParameter("action");
-        if(action == null) action = "list";
+        String action = req.getParameter("action");
+        if (action == null) action = "list";
 
-        try{
+        try {
             switch (action) {
                 case "list":
                     listProducts(req, resp);
@@ -49,7 +50,7 @@ public class ProductServlet extends HttpServlet {
                 default:
                     listProducts(req, resp);
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             req.setAttribute("error", "An error occurred: " + e.getMessage());
             req.getRequestDispatcher("/error/500.jsp").forward(req, resp);
         }
@@ -58,10 +59,10 @@ public class ProductServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
-        String action  = req.getParameter("action");
+        String action = req.getParameter("action");
 
-        try{
-            switch (action){
+        try {
+            switch (action) {
                 case "create":
                     createProduct(req, resp);
                     break;
@@ -71,7 +72,7 @@ public class ProductServlet extends HttpServlet {
                 default:
                     listProducts(req, resp);
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             req.setAttribute("error", e.getMessage());
             req.getRequestDispatcher("/products/form.jsp").forward(req, resp);
         }
@@ -81,9 +82,10 @@ public class ProductServlet extends HttpServlet {
         int page = 1;
         int pageSize = 5;
 
-        try{
+        try {
             page = Integer.parseInt(req.getParameter("page"));
-        } catch(NumberFormatException e){}
+        } catch (NumberFormatException e) {
+        }
 
         List<Product> products = productDAO.getProducts(page, pageSize);
         int totalCount = productDAO.getTotalCount();
@@ -100,10 +102,10 @@ public class ProductServlet extends HttpServlet {
         int id = Integer.parseInt(req.getParameter("id"));
         Optional<Product> product = productDAO.getProductById(id);
 
-        if(product.isPresent()){
+        if (product.isPresent()) {
             req.setAttribute("product", product.get());
             req.getRequestDispatcher("/products/view.jsp").forward(req, resp);
-        }else{
+        } else {
             req.setAttribute("error", "Product not found with ID: " + id);
             resp.sendRedirect(req.getContextPath() + "/products?action=list");
         }
@@ -119,12 +121,12 @@ public class ProductServlet extends HttpServlet {
         int id = Integer.parseInt(req.getParameter("id"));
         Optional<Product> product = productDAO.getProductById(id);
 
-        if(product.isPresent()){
+        if (product.isPresent()) {
             req.setAttribute("product", product.get());
             req.setAttribute("formTitle", "Edit Product");
             req.setAttribute("formAction", "update");
             req.getRequestDispatcher("/products/form.jsp").forward(req, resp);
-        } else{
+        } else {
             resp.sendRedirect(req.getContextPath() + "/products?action=list");
         }
     }
@@ -136,11 +138,11 @@ public class ProductServlet extends HttpServlet {
         String priceStr = req.getParameter("price").trim();
         String quantityStr = req.getParameter("quantity").trim();
 
-        StringBuilder errors = new  StringBuilder();
-        if(name.isEmpty()) errors.append("Name is required.");
-        if(priceStr.isEmpty()) errors.append("Price is required.");
+        StringBuilder errors = new StringBuilder();
+        if (name.isEmpty()) errors.append("Name is required.");
+        if (priceStr.isEmpty()) errors.append("Price is required.");
 
-        if(errors.length() > 0){
+        if (errors.length() > 0) {
             req.setAttribute("error", errors.toString());
             req.setAttribute("formTitle", "Add New Product");
             req.setAttribute("formAction", "create");
@@ -155,9 +157,9 @@ public class ProductServlet extends HttpServlet {
         product.setQuantity(Integer.parseInt(quantityStr));
         product.setActive(req.getParameter("active") != null);
 
-        if(productDAO.addProduct(product)){
+        if (productDAO.addProduct(product)) {
             req.getSession().setAttribute("message", "Product created successfully!");
-        } else{
+        } else {
             req.getSession().setAttribute("error", "Failed to create product.");
         }
         resp.sendRedirect(req.getContextPath() + "/products?action=list");
@@ -175,9 +177,9 @@ public class ProductServlet extends HttpServlet {
         product.setActive(req.getParameter("active") != null);
 
 
-        if(productDAO.updateProduct(product)){
+        if (productDAO.updateProduct(product)) {
             req.getSession().setAttribute("message", "Product updated successfully!");
-        } else{
+        } else {
             req.getSession().setAttribute("error", "Failed to update product.");
         }
 
@@ -186,9 +188,9 @@ public class ProductServlet extends HttpServlet {
 
     public void deleteProduct(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         int id = Integer.parseInt(req.getParameter("id"));
-        if(productDAO.deleteProduct(id)){
+        if (productDAO.deleteProduct(id)) {
             req.getSession().setAttribute("message", "Product deleted successfully!");
-        } else{
+        } else {
             req.getSession().setAttribute("error", "Failed to delete product.");
         }
 
@@ -201,7 +203,7 @@ public class ProductServlet extends HttpServlet {
         req.setAttribute("products", products);
         req.setAttribute("keyword", keyword);
         req.setAttribute("currentPage", 1);
-        req.setAttribute("totalPages",1);
+        req.setAttribute("totalPages", 1);
         req.setAttribute("totalCount", products.size());
 
         req.getRequestDispatcher("/products/list.jsp").forward(req, resp);
