@@ -7,9 +7,10 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Product;
-
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @WebServlet(urlPatterns = {"/products", "/products/*"})
 public class ProductServlet extends HttpServlet {
@@ -28,25 +29,25 @@ public class ProductServlet extends HttpServlet {
         try{
             switch (action) {
                 case "list":
-                    listProducts(request, response);
+                    listProducts(req, resp);
                     break;
                 case "view":
-                    viewProduct(request, response);
+                    viewProduct(req, resp);
                     break;
                 case "new":
-                    showNewForm(request, response);
+                    showNewForm(req, resp);
                     break;
                 case "edit":
-                    showEditForm(request, response);
+                    showEditForm(req, resp);
                     break;
                 case "delete":
-                    deleteProduct(request, response);
+                    deleteProduct(req, resp);
                     break;
                 case "search":
-                    searchProducts(request, response);
+                    searchProducts(req, resp);
                     break;
                 default:
-                    listProducts(request, response);
+                    listProducts(req, resp);
             }
         } catch (Exception e){
             req.setAttribute("error", "An error occurred: " + e.getMessage());
@@ -92,6 +93,117 @@ public class ProductServlet extends HttpServlet {
         req.setAttribute("totalPages", totalPages);
         req.setAttribute("totalCount", totalCount);
         req.getRequestDispatcher("/products/list.jsp").forward(req, resp);
+    }
 
+
+    public void viewProduct(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        int id = Integer.parseInt(req.getParameter("id"));
+        Optional<Product> product = productDAO.getProductById(id);
+
+        if(product.isPresent()){
+            req.setAttribute("product", product.get());
+            req.getRequestDispatcher("/products/view.jsp").forward(req, resp);
+        }else{
+            req.setAttribute("error", "Product not found with ID: " + id);
+            resp.sendRedirect(req.getContextPath() + "/products?action=list");
+        }
+    }
+
+    public void showNewForm(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setAttribute("formTitle", "Add New Product");
+        req.setAttribute("formAction", "create");
+        req.getRequestDispatcher("/products/form.jsp").forward(req, resp);
+    }
+
+    private void showEditForm(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        int id = Integer.parseInt(req.getParameter("id"));
+        Optional<Product> product = productDAO.getProductById(id);
+
+        if(product.isPresent()){
+            req.setAttribute("product", product.get());
+            req.setAttribute("formTitle", "Edit Product");
+            req.setAttribute("formAction", "update");
+            req.getRequestDispatcher("/products/form.jsp").forward(req, resp);
+        } else{
+            resp.sendRedirect(req.getContextPath() + "/products?action=list");
+        }
+    }
+
+    private void createProduct(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String name = req.getParameter("name").trim();
+        String description = req.getParameter("description").trim();
+        String category = req.getParameter("category").trim();
+        String priceStr = req.getParameter("price").trim();
+        String quantityStr = req.getParameter("quantity").trim();
+
+        StringBuilder errors = new  StringBuilder();
+        if(name.isEmpty()) errors.append("Name is required.");
+        if(priceStr.isEmpty()) errors.append("Price is required.");
+
+        if(errors.length() > 0){
+            req.setAttribute("error", errors.toString());
+            req.setAttribute("formTitle", "Add New Product");
+            req.setAttribute("formAction", "create");
+            req.getRequestDispatcher("/products/form.jsp").forward(req, resp);
+            return;
+        }
+        Product product = new Product();
+        product.setName(name);
+        product.setDescription(description);
+        product.setCategory(category);
+        product.setPrice(new BigDecimal(priceStr));
+        product.setQuantity(Integer.parseInt(quantityStr));
+        product.setActive(req.getParameter("active") != null);
+
+        if(productDAO.addProduct(product)){
+            req.getSession().setAttribute("message", "Product created successfully!");
+        } else{
+            req.getSession().setAttribute("error", "Failed to create product.");
+        }
+        resp.sendRedirect(req.getContextPath() + "/products?action=list");
+    }
+
+    private void updateProduct(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        int id = Integer.parseInt(req.getParameter("id"));
+        Product product = new Product();
+        product.setId(id);
+        product.setName(req.getParameter("name").trim());
+        product.setDescription(req.getParameter("description").trim());
+        product.setCategory(req.getParameter("category").trim());
+        product.setPrice(new BigDecimal(req.getParameter("price").trim()));
+        product.setQuantity(Integer.parseInt(req.getParameter("quantity").trim()));
+        product.setActive(req.getParameter("active") != null);
+
+
+        if(productDAO.updateProduct(product)){
+            req.getSession().setAttribute("message", "Product updated successfully!");
+        } else{
+            req.getSession().setAttribute("error", "Failed to update product.");
+        }
+
+        resp.sendRedirect(req.getContextPath() + "/products?action=list");
+    }
+
+    public void deleteProduct(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        int id = Integer.parseInt(req.getParameter("id"));
+        if(productDAO.deleteProduct(id)){
+            req.getSession().setAttribute("message", "Product deleted successfully!");
+        } else{
+            req.getSession().setAttribute("error", "Failed to delete product.");
+        }
+
+        resp.sendRedirect(req.getContextPath() + "/products?action=list");
+    }
+
+    public void searchProducts(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String keyword = req.getParameter("keyword");
+        List<Product> products = productDAO.searchProducts(keyword);
+        req.setAttribute("products", products);
+        req.setAttribute("keyword", keyword);
+        req.setAttribute("currentPage", 1);
+        req.setAttribute("totalPages",1);
+        req.setAttribute("totalCount", products.size());
+
+        req.getRequestDispatcher("/products/list.jsp").forward(req, resp);
     }
 }
