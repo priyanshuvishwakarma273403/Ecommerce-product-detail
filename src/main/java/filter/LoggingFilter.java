@@ -2,7 +2,6 @@ package filter;
 
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -28,9 +27,9 @@ public class LoggingFilter implements Filter {
         long startTime = System.currentTimeMillis();
 
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        String method = ((HttpServletRequest) request).getMethod();
-        String uri = ((HttpServletRequest) request).getRequestURI();
-        String queryString = ((HttpServletRequest) request).getQueryString();
+        String method = request.getMethod();
+        String uri = request.getRequestURI();
+        String queryString = request.getQueryString();
         String clientIP = request.getRemoteAddr();
         String userAgent = request.getHeader("User-Agent");
 
@@ -46,7 +45,5 @@ public class LoggingFilter implements Filter {
     }
 
     @Override
-    public void destroy() {
-        Filter.super.destroy();
-    }
+    public void destroy() {}
 }
