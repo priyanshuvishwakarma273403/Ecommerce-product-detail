@@ -61,7 +61,7 @@ public class FileUploadServlet extends HttpServlet {
             String uniqueName = UUID.randomUUID().toString() + extension;
 
             String filePath = uploadPath + File.separator + originalName;
-            filePath.write(filePath);
+//            filePath.write(filePath);
 
 
             String description =  req.getParameter("description");

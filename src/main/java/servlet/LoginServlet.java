@@ -1,8 +1,10 @@
 package servlet;
 
+import dao.UserDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+import model.User;
 
 import java.io.IOException;
 import java.util.Optional;

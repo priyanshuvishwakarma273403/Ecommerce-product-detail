@@ -1,5 +1,5 @@
 <%-- login.jsp--%>
-<%@ pagecontentType="text/html;charset=UTF-8" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%-- Redirect if already logged in--%>
